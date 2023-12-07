@@ -22,6 +22,7 @@
 #include <dbus-cxx.h>
 #include <expat.h>
 #include <stack>
+#include <thread>
 
 #include "test_macros.h"
 

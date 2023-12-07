@@ -21,6 +21,7 @@
 #include <dbus-cxx.h>
 #include <unistd.h>
 #include <iostream>
+#include <thread>
 
 #include "test_macros.h"
 
