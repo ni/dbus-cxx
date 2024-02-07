@@ -19,6 +19,7 @@
  *   along with this software. If not see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
 //#include <dbus-cxx.h>
+#include <thread>
 #include <unistd.h>
 #include <iostream>
 
