@@ -1,36 +1,34 @@
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
-from conan.tools.scm import Git
+from conan.tools.cmake import cmake_layout, CMakeDeps, CMakeToolchain, CMake
+
 
 class DbusCXX(ConanFile):
     name = "dbus-cxx"
     version = "2.4.0"
+
     settings = "os", "compiler", "build_type", "arch"
-    generators = "CMakeDeps"
 
     default_options = {"libuv/(*:static": True}
 
-
-    def source(self):
-        git = Git(self)
-        git.clone(url="https://github.com/alynch-ni/dbus-cxx.git", target=".")
-        # Please, be aware that using the head of the branch instead of an immutable tag
-        # or commit is not a good practice in general
-        git.checkout("conan-windows")
+    # The package is defined in the same repo as the source so we can
+    # use the exports_sources attribute rather than have an explicit
+    # 'def source():' method.
+    exports_sources = "CMakeLists.txt", "*.cmake", "dbus-cxx.h", "dbus-cxx/*", "dbus-cxx-uv/*", "compat/*", "cmake-tests/*", "unit-tests/*"
 
     def requirements(self):
-        self.requires("libsigcpp/3.0.7")
-        self.requires("expat/2.5.0")
-        self.requires("libuv/1.46.0")
+        self.requires("libsigcpp/[^3.0.7]")
+        self.requires("expat/[^2.5.0]")
+        self.requires("libuv/[^1.46.0]")
 
-    def generate(self):
-        tc = CMakeToolchain(self)
-        tc.generate()
+    def layout(self):
+        cmake_layout(self)
+
+    generators = "CMakeToolchain", "CMakeDeps"
 
     def build(self):
         cmake = CMake(self)
         cmake.configure()
-        cmake.build(build_type="Release")
+        cmake.build()
 
     def package(self):
         cmake = CMake(self)
