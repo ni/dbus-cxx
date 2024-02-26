@@ -244,6 +244,19 @@ target_include_directories( test-property PUBLIC ${CMAKE_SOURCE_DIR} )
 target_include_directories( test-property PUBLIC ${CMAKE_CURRENT_BINARY_DIR} )
 set_property( TARGET test-property PROPERTY CXX_STANDARD 17 )
 
+#
+# Address unescaping tests - test that we unescape dbus address values correctly
+#
+add_executable( test-addressunescape addressunescape-test.cpp )
+target_link_libraries( test-addressunescape ${TEST_LINK} )
+target_include_directories( test-addressunescape PUBLIC ${CMAKE_SOURCE_DIR} )
+target_include_directories( test-addressunescape PUBLIC ${CMAKE_CURRENT_BINARY_DIR} )
+set_property( TARGET test-addressunescape PROPERTY CXX_STANDARD 17 )
+
+add_test( NAME address-unix-socket COMMAND test-addressunescape "/tmp/dbus-test" "/tmp/dbus-test" )
+add_test( NAME address-windows-socket1 COMMAND test-addressunescape "c%3a\\tmp\\dbus-test" "c:\\tmp\\dbus-test" )
+add_test( NAME address-windows-socket2 COMMAND test-addressunescape "c%3A\\tmp\\dbus-test" "c:\\tmp\\dbus-test" )
+
 if( UNIX )
 
 #
