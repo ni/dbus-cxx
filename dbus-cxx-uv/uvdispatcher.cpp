@@ -67,21 +67,38 @@ class UVPollConnection
 public:
     UVPollConnection(std::shared_ptr<DBus::Connection> connection) : connection(connection)
     {
+        // uv_poll must be a naked pointer because the uv_close()
+        // call completes ansynchronosuly; deletion is performed
+        // in the close callback.
+
         uv_poll = new uv_poll_t;
 
-        // uv_poll must be a naked pointer because the final
-        // uv_close() call triggered in the destructor completes
-        // ansynchronosuly; deletion is performed in the close
-        // callback.
-        if (int r = uv_poll_init(uv_default_loop(), uv_poll, connection->unix_fd()); r < 0) {
-            throw std::system_error(r, std::system_category(), "uv_poll_init");
+        // the dbus-cxx transport always opens a socket so we use the
+        // socket version of uv_poll_init. That is identical to the fd
+        // call on Linux but socket specific on Windows.
+
+        if (int r = uv_poll_init_socket(uv_default_loop(), uv_poll, connection->unix_fd()); r < 0) {
+            SIMPLELOGGER_ERROR(LOGGER_NAME, "uv_poll_init failed: " << r);
+            delete uv_poll;
+            throw std::system_error(r, std::system_category(), "uv_poll setup");
         }
 
         uv_poll->data = connection.get();
 
         if (int r = uv_poll_start(uv_poll, UV_READABLE | UV_WRITABLE, poll_cb); r < 0) {
-            throw std::system_error(r, std::system_category(), "uv_poll_start");
+            SIMPLELOGGER_ERROR(LOGGER_NAME, "uv_poll_start failed: " << r);
+            uv_close((uv_handle_t *)uv_poll, close_cb);
+            throw std::system_error(r, std::system_category(), "uv_poll setup");
         }
+    }
+
+    UVPollConnection(const UVPollConnection &) = delete;
+    UVPollConnection &operator=(const UVPollConnection &) = delete;
+
+    UVPollConnection(UVPollConnection &&other) {
+        uv_poll = other.uv_poll;
+        other.uv_poll = nullptr;
+        connection = std::move(other.connection);
     }
 
     virtual ~UVPollConnection()
@@ -141,7 +158,7 @@ bool UvDispatcher::add_connection( std::shared_ptr<DBus::Connection> connection 
         return true;
     }
     catch (std::system_error e) {
-        SIMPLELOGGER_ERROR( LOGGER_NAME, "connection failed: " << e.what() << ", " << e.code() );
+        SIMPLELOGGER_ERROR( LOGGER_NAME, "add_connection failed: " << e.what() << ", " << e.code() );
         return false;
     }
 }
