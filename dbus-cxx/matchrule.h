@@ -29,6 +29,8 @@ public:
 
     std::string path() const;
 
+    std::string path_namespace() const;
+
     std::string dbus_interface() const;
 
     std::string member() const;
@@ -80,6 +82,8 @@ protected:
 
 public:
     MatchRuleBuilder& set_path( const std::string& path );
+
+    MatchRuleBuilder& set_path_namespace( const std::string& path_namespace );
 
     MatchRuleBuilder& set_interface( const std::string& interface_name );
 

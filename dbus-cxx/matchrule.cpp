@@ -23,6 +23,7 @@ public:
 
     std::string m_type;
     std::string m_path;
+    std::string m_path_namespace;
     std::string m_interface;
     std::string m_member;
     std::string m_sender;
@@ -37,6 +38,11 @@ MatchRuleBuilder::MatchRuleBuilder() :
 
 MatchRuleBuilder& MatchRuleBuilder::set_path( const std::string& path ) {
     m_priv->m_path = path;
+    return *this;
+}
+
+MatchRuleBuilder& MatchRuleBuilder::set_path_namespace( const std::string& path_namespace ) {
+    m_priv->m_path_namespace = path_namespace;
     return *this;
 }
 
@@ -99,6 +105,10 @@ std::string MatchRule::path() const {
     return m_priv->m_path;
 }
 
+std::string MatchRule::path_namespace() const {
+    return m_priv->m_path_namespace;
+}
+
 std::string MatchRule::dbus_interface() const {
     return m_priv->m_interface;
 }
@@ -110,13 +120,15 @@ std::string MatchRule::member() const {
 std::string MatchRule::match_rule() const {
     std::string match_rule = "type='" + m_priv->m_type + "'";
 
-    if( !m_priv->m_interface.empty() ) { match_rule += ",interface='"   + m_priv->m_interface   + "'"; }
+    if( !m_priv->m_interface.empty() ) { match_rule += ",interface='" + m_priv->m_interface + "'"; }
 
-    if( !m_priv->m_member.empty() ) { match_rule += ",member='"      + m_priv->m_member      + "'"; }
+    if( !m_priv->m_member.empty() ) { match_rule += ",member='" + m_priv->m_member + "'"; }
 
-    if( !m_priv->m_sender.empty() ) { match_rule += ",sender='"      + m_priv->m_sender      + "'"; }
+    if( !m_priv->m_sender.empty() ) { match_rule += ",sender='" + m_priv->m_sender + "'"; }
 
-    if( !m_priv->m_path.empty() ) { match_rule += ",path='"        + m_priv->m_path        + "'"; }
+    if( !m_priv->m_path.empty() ) { match_rule += ",path='" + m_priv->m_path + "'"; }
+
+    if( !m_priv->m_path_namespace.empty() ) { match_rule += ",path_namespace='" + m_priv->m_path_namespace + "'"; }
 
     if( !m_priv->m_destination.empty() ) { match_rule += ",destination='" + m_priv->m_destination + "'"; }
 
