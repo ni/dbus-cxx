@@ -8,7 +8,9 @@ class DbusCXX(ConanFile):
 
     settings = "os", "compiler", "build_type", "arch"
 
-    default_options = {"libuv/(*:static": True}
+    # Default to a relocatable static library
+    options = {"shared": [True, False], "fPIC": [True, False]}
+    default_options = {"shared": True, "fPIC": False}
 
     # The package is defined in the same repo as the source so we can
     # use the exports_sources attribute rather than have an explicit
@@ -16,7 +18,7 @@ class DbusCXX(ConanFile):
     exports_sources = "CMakeLists.txt", "*.cmake", "dbus-cxx.h", "dbus-cxx/*", "dbus-cxx-uv/*", "compat/*", "cmake-tests/*", "unit-tests/*"
 
     def requirements(self):
-        self.requires("libsigcpp/[^3.0.7]")
+        self.requires("libsigcpp/[^3.0.7]", transitive_headers=True)
         self.requires("expat/[^2.5.0]")
         self.requires("libuv/[^1.46.0]")
 
@@ -35,5 +37,16 @@ class DbusCXX(ConanFile):
         cmake.install()
 
     def package_info(self):
-        # order the dependent library first so it links correctly (hopefully)
-        self.cpp_info.libs = ["dbus-cxx-uv", "dbus-cxx"]
+        self.cpp_info.libs = []
+        self.cpp_info.requires = []
+
+        # TODO: when dbus-cxx-uv is an option, add it here only when option picked
+        self.cpp_info.libs.append("dbus-cxx-uv")
+        self.cpp_info.requires.append("libuv::libuv")
+
+        # Add the main dbus-cxx library last so that symbols needed by
+        # the loop integration libraries are kept (alternative would
+        # be --whole-archive)
+        self.cpp_info.libs.append("dbus-cxx")
+        self.cpp_info.requires.append("libsigcpp::sigc++")
+        self.cpp_info.requires.append("expat::expat")
