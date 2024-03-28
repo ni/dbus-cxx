@@ -20,10 +20,12 @@
  ***************************************************************************/
 #include <cstring>
 #include <system_error>
-#include <uv.h>
+#include <stddef.h>
 
 #include <dbus-cxx/connection.h>
 #include <dbus-cxx/dbus-cxx-private.h>
+
+#include <uv.h>
 
 #include "uvdispatcher.h"
 
@@ -51,6 +53,20 @@ public:
         // call completes ansynchronosuly; deletion is performed
         // in the close callback.
         uv_poll = new uv_poll_t;
+
+#ifdef _WIN32
+        // libuv uses a fast poll technique that interferes with later
+        // calls to WSAPoll. This breaks operations that wait for a
+        // reply (e.g. calling an object method) so by default we
+        // disable it.
+        //
+        // disable fast poling by pre-marking the peer sockets as
+        // "failed" so libuv thinks the protocols are not supported
+        // (see uv__fast_poll_get_peer_socket() in libuv).
+        for (int i = 0; i < UV_MSAFD_PROVIDER_COUNT; i++) {
+            uv_default_loop()->poll_peer_sockets[i] = -1;
+        }
+#endif
 
         try {
             // the dbus-cxx transport always opens a socket so we use the
