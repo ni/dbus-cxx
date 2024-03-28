@@ -23,6 +23,8 @@
 
 #include <dbus-cxx/connection.h>
 #include <dbus-cxx/dbus-cxx-private.h>
+
+# define _SSIZE_T_DEFINED
 #include <uv.h>
 
 #include "uvdispatcher.h"
