@@ -10,12 +10,20 @@ class DbusCXX(ConanFile):
 
     # Default to a relocatable static library
     options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": True, "fPIC": False}
+    default_options = {"shared": False, "fPIC": True}
 
     # The package is defined in the same repo as the source so we can
     # use the exports_sources attribute rather than have an explicit
     # 'def source():' method.
     exports_sources = "CMakeLists.txt", "*.cmake", "dbus-cxx.h", "dbus-cxx/*", "dbus-cxx-uv/*", "compat/*", "cmake-tests/*", "unit-tests/*"
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
+
+    def configure(self):
+        if self.options.shared:
+            self.options.rm_safe("fPIC");
 
     def requirements(self):
         self.requires("libsigcpp/[^3.0.7]", transitive_headers=True)
