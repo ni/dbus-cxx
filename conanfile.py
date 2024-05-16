@@ -28,7 +28,10 @@ class DbusCXX(ConanFile):
     def requirements(self):
         self.requires("libsigcpp/[^3.0.7]", transitive_headers=True)
         self.requires("expat/[^2.5.0]")
-        self.requires("libuv/[^1.46.0]")
+
+        # To support the gcc 7.3 toolchain we have to limit the libuv
+        # version. RedHat 7 support was dropped in 1.45
+        self.requires("libuv/[<=1.44.0]")
 
     def layout(self):
         cmake_layout(self)
@@ -52,9 +55,12 @@ class DbusCXX(ConanFile):
         self.cpp_info.libs.append("dbus-cxx-uv")
         self.cpp_info.requires.append("libuv::libuv")
 
-        # Add the main dbus-cxx library last so that symbols needed by
-        # the loop integration libraries are kept (alternative would
-        # be --whole-archive)
+        # Add the main dbus-cxx library last so it appears last on the
+        # client link command so that symbols needed by the loop
+        # integration libraries above are kept (alternative would be
+        # --whole-archive)
         self.cpp_info.libs.append("dbus-cxx")
+
+        # Propagate dependencies
         self.cpp_info.requires.append("libsigcpp::sigc++")
         self.cpp_info.requires.append("expat::expat")
