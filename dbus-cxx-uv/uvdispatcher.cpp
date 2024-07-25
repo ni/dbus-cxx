@@ -40,27 +40,7 @@ close_cb(uv_handle_t* h)
 }
 
 static void
-poll_cb(uv_poll_t* h, int status, int event)
-{
-    if (status == -EBADF) {
-        // "bad file descrioptior" indicates the FD was a pipe
-        // (FIFO) and the other end was closed
-        //
-        // log and ignore assuming that this is part of
-        // pipeline shutdown
-        //
-        SIMPLELOGGER_DEBUG( LOGGER_NAME, "polled FD went bad, assmuming pipeline shutdown" );
-    } else if (status < 0) {
-        SIMPLELOGGER_ERROR( LOGGER_NAME, "poll_cb called with bad status: " << std::strerror(-status) << ", " << status);
-    } else if (event & (UV_READABLE | UV_WRITABLE)) {
-        auto conn = reinterpret_cast<DBus::Connection*>(h->data);
-        while(true) {
-            if(auto dispatch_status = conn->dispatch(); dispatch_status == DBus::DispatchStatus::COMPLETE ) {
-                break;
-            }
-        }
-    }
-}
+poll_cb(uv_poll_t* h, int status, int event);
 
 namespace
 {
@@ -72,26 +52,35 @@ public:
         // uv_poll must be a naked pointer because the uv_close()
         // call completes ansynchronosuly; deletion is performed
         // in the close callback.
-
         uv_poll = new uv_poll_t;
 
-        // the dbus-cxx transport always opens a socket so we use the
-        // socket version of uv_poll_init. That is identical to the fd
-        // call on Linux but socket specific on Windows.
+        try {
+            // the dbus-cxx transport always opens a socket so we use the
+            // socket version of uv_poll_init. That is identical to the fd
+            // call on Linux but socket specific on Windows.
+            if (int r = uv_poll_init_socket(uv_default_loop(), uv_poll, connection->unix_fd()); r < 0) {
+                throw std::system_error(r, std::system_category(), "uv_poll_init_socket");
+            }
 
-        if (int r = uv_poll_init_socket(uv_default_loop(), uv_poll, connection->unix_fd()); r < 0) {
-            SIMPLELOGGER_ERROR(LOGGER_NAME, "uv_poll_init failed: " << r);
-            delete uv_poll;
-            throw std::system_error(r, std::system_category(), "uv_poll setup");
+            uv_poll->data = this;
+        }
+        catch (...) {
+            // despite the init failing, the loop retains a reference
+            // to the handle so it must be closed.
+            uv_close((uv_handle_t*)uv_poll, close_cb);
+
+            // Re-throw the exception
+            throw;
         }
 
-        uv_poll->data = connection.get();
+        // Now the we have a valid poll handle, connect a signal to
+        // the "needs dispatch" event which indicates when the
+        // connection has data to write.
+        connection->signal_needs_dispatch().connect(
+            sigc::mem_fun(*this, &UVPollConnection::restart_writeable));
 
-        if (int r = uv_poll_start(uv_poll, UV_READABLE | UV_WRITABLE, poll_cb); r < 0) {
-            SIMPLELOGGER_ERROR(LOGGER_NAME, "uv_poll_start failed: " << r);
-            uv_close((uv_handle_t *)uv_poll, close_cb);
-            throw std::system_error(r, std::system_category(), "uv_poll setup");
-        }
+        // Finally, we can start the handle for reading
+        restart();
     }
 
     UVPollConnection(const UVPollConnection &) = delete;
@@ -105,17 +94,59 @@ public:
 
     virtual ~UVPollConnection()
     {
+        // ensure the poll object is stopped so it doesn't try to
+        // access the callback that is about to be destroyed
         uv_poll_stop(uv_poll);
+
+        // zero out the reference for good measure
+        uv_poll->data = nullptr;
+
         // Note: libuv owns the uv_poll allocation until the close
         // callback completes.
         uv_close((uv_handle_t*)uv_poll, close_cb);
     }
 
+    void restart() { uv_poll_start(uv_poll, UV_READABLE, poll_cb); }
+
+    void restart_writeable() { uv_poll_start(uv_poll, UV_READABLE | UV_WRITABLE, poll_cb); }
+
+    std::shared_ptr<DBus::Connection> connection;
+
 private:
     uv_poll_t* uv_poll = nullptr;
-    std::shared_ptr<DBus::Connection> connection;
 };
 } // namespace
+
+
+void
+poll_cb(uv_poll_t* h, int status, int event)
+{
+    auto uvpc = static_cast<UVPollConnection*>(h->data);
+
+    if (status == -EBADF) {
+        // "bad file descrioptior" indicates the FD was a pipe
+        // (FIFO) and the other end was closed
+        //
+        // log and ignore assuming that this is part of
+        // pipeline shutdown
+        //
+        SIMPLELOGGER_DEBUG( LOGGER_NAME, "polled FD went bad, assmuming pipeline shutdown" );
+    } else if (status < 0) {
+        SIMPLELOGGER_ERROR( LOGGER_NAME, "poll_cb called with bad status: " << std::strerror(-status) << ", " << status);
+    } else if (event & UV_WRITABLE) {
+         // if we were polling for write-ability, we need to restart
+         // the poll handle after dispatching to stop (the
+         // signal_needs_dispatch handler will restart for write)
+         while (uvpc->connection->dispatch() != DBus::DispatchStatus::COMPLETE) {
+         }
+         uvpc->restart();
+     } else if (event & UV_READABLE) {
+         // if there is no write-able event then there is no need to
+         // restart to poll handle
+         while (uvpc->connection->dispatch() != DBus::DispatchStatus::COMPLETE) {
+         }
+     }
+}
 
 class UvDispatcher::priv_data {
 public:
@@ -135,7 +166,7 @@ std::shared_ptr<UvDispatcher> UvDispatcher::create(){
 }
 
 std::shared_ptr<DBus::Connection> UvDispatcher::create_connection( DBus::BusType type ){
-    std::shared_ptr<DBus::Connection> conn = DBus::Connection::create( type );
+    std::shared_ptr<DBus::Connection> conn = DBus::Connection::create(type);
     if( conn->bus_register() && add_connection( conn ) ){
         return conn;
     }
@@ -154,7 +185,6 @@ bool UvDispatcher::add_connection( std::shared_ptr<DBus::Connection> connection 
     if( !connection ){
         return false;
     }
-
     try {
         m_priv->m_connections.emplace_back(connection);
         return true;
