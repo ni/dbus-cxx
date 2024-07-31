@@ -149,9 +149,10 @@ void StandaloneDispatcher::dispatch_thread_main() {
 
         std::tuple<bool, int, std::vector<int>, std::chrono::milliseconds> fdResponse =
             DBus::priv::wait_for_fd_activity( fds, -1 );
+        const int numFdsToRead = std::get<1>( fdResponse );
         std::vector<int> fdsToRead = std::get<2>( fdResponse );
 
-        if( fdsToRead[ 0 ] == m_priv->process_fd[ 1 ] ) {
+        if( numFdsToRead > 0 && fdsToRead[ 0 ] == m_priv->process_fd[ 1 ] ) {
             char discard;
             if( read( m_priv->process_fd[ 1 ], &discard, sizeof( char ) ) < 0 ){
                 SIMPLELOGGER_DEBUG( LOGGER_NAME, "Failure reading from dispatch thread process_fd: "
