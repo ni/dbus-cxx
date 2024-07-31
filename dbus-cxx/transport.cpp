@@ -195,6 +195,10 @@ static int open_unix_socket( std::string socketAddress, bool is_abstract ) {
 
     SIMPLELOGGER_DEBUG( LOGGER_NAME, "Opened dbus connection to " + socketAddress );
 
+#ifdef _WIN32
+    // Windows does not support passing ancillary data over UNIX domain sockets
+    // such as SCM_CREDENTIALS.
+#else
     stat = ::setsockopt( fd, SOL_SOCKET, SO_PASSCRED, &passcred, sizeof( int ) );
 
     if( stat < 0 ) {
@@ -205,6 +209,7 @@ static int open_unix_socket( std::string socketAddress, bool is_abstract ) {
         close( fd );
         return stat;
     }
+#endif
 
     // Turn the FD into non-blocking
     {
@@ -242,11 +247,19 @@ std::shared_ptr<Transport> Transport::open_transport( std::string address ) {
                         continue;
                     }
 
+#ifdef _WIN32
+                    negotiateFD = false; // DBus on Windows does not support NEGOTIATE_UNIX_FD
+#else /* POSIX */
                     negotiateFD = true;
+#endif
                     break;
                 }
             }
 
+#ifdef _WIN32
+            // DBus on Windows as of 1.15  does not
+            // support abstract UNIX domain sockets.
+#else /* POSIX */
             if( !abstractPath.empty() ) {
                 fd = open_unix_socket( abstractPath, true );
 
@@ -262,6 +275,7 @@ std::shared_ptr<Transport> Transport::open_transport( std::string address ) {
                     break;
                 }
             }
+#endif
         }
     }
 
