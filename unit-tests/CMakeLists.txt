@@ -4,8 +4,11 @@ set( TEST_LINK dbus-cxx PkgConfig::sigc PkgConfig::expat ${LIBRT} )
 
 link_directories( ${CMAKE_BINARY_DIR} )
 
-include_directories( ${CMAKE_SOURCE_DIR}/dbus-cxx
-    ${CMAKE_BINARY_DIR}/dbus-cxx )
+include_directories( ${CMAKE_SOURCE_DIR}/dbus-cxx ${CMAKE_BINARY_DIR}/dbus-cxx )
+
+if( WIN32 )
+  include_directories( ${CMAKE_SOURCE_DIR}/compat )
+endif( WIN32 )
 
 if( ENABLE_ROBUSTNESS_TESTS )
     add_subdirectory( robustness-tests )
