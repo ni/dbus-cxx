@@ -61,7 +61,7 @@ bool signal_tx_rx() {
     proxy->connect( sigc::ptr_fun( sigHandle ) );
 
     signal->emit( "TestSignal" );
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     TEST_ASSERT_RET_FAIL( signal_value.compare( "TestSignal" ) == 0 );
     return true;
@@ -82,7 +82,7 @@ bool signal_void_txrx() {
     proxy->connect( sigc::ptr_fun( voidSigHandle ) );
 
     signal->emit();
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     TEST_ASSERT_RET_FAIL( num_rx == 1 );
     return true;
@@ -101,7 +101,7 @@ bool signal_path_match_only() {
     proxy->connect( sigc::ptr_fun( voidSigHandle ) );
 
     signal->emit();
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     TEST_ASSERT_RET_FAIL( num_rx == 1 );
     return true;
@@ -120,7 +120,7 @@ bool signal_interface_match_only() {
     proxy->connect( sigc::ptr_fun( voidSigHandle ) );
 
     signal->emit();
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     TEST_ASSERT_RET_FAIL( num_rx == 1 );
     return true;
@@ -139,7 +139,7 @@ bool signal_member_match_only() {
     proxy->connect( sigc::ptr_fun( voidSigHandle ) );
 
     signal->emit();
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     TEST_ASSERT_RET_FAIL( num_rx == 1 );
     return true;
@@ -166,7 +166,7 @@ bool signal_multiple_handlers() {
     proxy2->connect( sigc::ptr_fun( voidSigHandle ) );
 
     signal->emit();
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     TEST_ASSERT_RET_FAIL( num_rx == 2 );
     return true;
@@ -193,14 +193,14 @@ bool signal_remove_handler() {
     proxy2->connect( sigc::ptr_fun( voidSigHandle ) );
 
     signal->emit();
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     TEST_ASSERT_RET_FAIL( num_rx == 2 );
 
     TEST_ASSERT_RET_FAIL( conn->remove_free_signal_proxy( proxy ) );
 
     signal->emit();
-    sleep( 1 );
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
     TEST_ASSERT_RET_FAIL( num_rx == 3 );
 
     return true;
