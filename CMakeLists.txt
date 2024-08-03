@@ -22,9 +22,6 @@ include( CheckTypeSize )
 include( CTest )
 include( CheckCXXSymbolExists )
 include( CheckCXXCompilerFlag )
-IF( CMAKE_BUILD_TYPE MATCHES Debug )
-include( CodeCoverage )
-ENDIF( CMAKE_BUILD_TYPE MATCHES Debug )
 
 find_package(PkgConfig REQUIRED)
 
@@ -56,6 +53,32 @@ endif( BUILD_TESTING )
 option( ENABLE_QT_SUPPORT "Build libdbuscxx-qt for integration with Qt applications" OFF )
 option( ENABLE_UV_SUPPORT "Build libdbuscxx-uv for integration with libuv applications" OFF )
 option( UV_STATIC "Link statically with libuv when using it" OFF )
+
+#
+# Option validity checks
+#
+if( ENABLE_TOOLS AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of tools are not supported")
+endif()
+
+if( ENABLE_EXAMPLES AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of examples are not supported")
+endif()
+
+if( ENABLE_GLIB_SUPPORT AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of glib integration are not supported")
+endif()
+
+if( ENABLE_QT_SUPPORT AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of qt integration are not supported")
+endif()
+
+#
+# Option-based includes
+#
+if( ENABLE_CODE_COVERAGE_REPORT )
+  include( CodeCoverage )
+endif( ENABLE_CODE_COVERAGE_REPORT )
 
 # With glibc >= 2.35, it seems that we no longer need to link with -lrt:
 # https://sourceware.org/pipermail/libc-alpha/2021-August/129718.html
@@ -465,3 +488,4 @@ message(STATUS "Library Support:" )
 message(STATUS "  Qt .............................. : ${ENABLE_QT_SUPPORT}")
 message(STATUS "  GLib ............................ : ${ENABLE_GLIB_SUPPORT}")
 message(STATUS "  libuv ........................... : ${ENABLE_UV_SUPPORT} (static: ${UV_STATIC})")
+
