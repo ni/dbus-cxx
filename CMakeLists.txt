@@ -57,6 +57,17 @@ option( ENABLE_QT_SUPPORT "Build libdbuscxx-qt for integration with Qt applicati
 option( ENABLE_UV_SUPPORT "Build libdbuscxx-uv for integration with libuv applications" OFF )
 option( UV_STATIC "Link statically with libuv when using it" OFF )
 
+#
+# Option validity checks
+#
+if( ENABLE_TOOLS AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of tools are not supported")
+endif()
+
+if( ENABLE_EXAMPLES AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of examples are not supported")
+endif()
+
 # With glibc >= 2.35, it seems that we no longer need to link with -lrt:
 # https://sourceware.org/pipermail/libc-alpha/2021-August/129718.html
 # Note: this is also the case with Debian 11(Bullseye) which uses glibc
@@ -465,3 +476,4 @@ message(STATUS "Library Support:" )
 message(STATUS "  Qt .............................. : ${ENABLE_QT_SUPPORT}")
 message(STATUS "  GLib ............................ : ${ENABLE_GLIB_SUPPORT}")
 message(STATUS "  libuv ........................... : ${ENABLE_UV_SUPPORT} (static: ${UV_STATIC})")
+
