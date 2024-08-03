@@ -36,9 +36,9 @@ target_include_directories( dbus-cxx-qt INTERFACE
 
 set_property( TARGET dbus-cxx-qt PROPERTY CXX_STANDARD 17 )
 
-if( BUILD_TESTING )
+if( UNIX AND BUILD_TESTING )
     add_subdirectory( unit-tests )
-endif( BUILD_TESTING )
+endif( UNIX AND BUILD_TESTING )
 
 #
 # pkg-config script creation and install

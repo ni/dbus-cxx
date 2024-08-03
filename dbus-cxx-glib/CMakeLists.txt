@@ -31,9 +31,9 @@ target_link_libraries( dbus-cxx-glib PUBLIC PkgConfig::glib )
 
 set_property( TARGET dbus-cxx-glib PROPERTY CXX_STANDARD 17 )
 
-if( BUILD_TESTING )
+if( UNIX AND BUILD_TESTING )
     add_subdirectory( unit-tests )
-endif( BUILD_TESTING )
+endif( UNIX AND BUILD_TESTING )
 
 #
 # pkg-config script creation and install
