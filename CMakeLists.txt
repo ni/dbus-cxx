@@ -22,9 +22,6 @@ include( CheckTypeSize )
 include( CTest )
 include( CheckCXXSymbolExists )
 include( CheckCXXCompilerFlag )
-IF( CMAKE_BUILD_TYPE MATCHES Debug )
-include( CodeCoverage )
-ENDIF( CMAKE_BUILD_TYPE MATCHES Debug )
 
 find_package(PkgConfig REQUIRED)
 
@@ -67,6 +64,13 @@ endif()
 if( ENABLE_EXAMPLES AND NOT UNIX )
   message( FATAL_ERROR "Windows builds of examples are not supported")
 endif()
+
+#
+# Option-based includes
+#
+if( ENABLE_CODE_COVERAGE_REPORT )
+include( CodeCoverage )
+endif( ENABLE_CODE_COVERAGE_REPORT )
 
 # With glibc >= 2.35, it seems that we no longer need to link with -lrt:
 # https://sourceware.org/pipermail/libc-alpha/2021-August/129718.html
