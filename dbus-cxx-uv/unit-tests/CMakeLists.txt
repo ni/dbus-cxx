@@ -39,4 +39,8 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/dbus-wrapper-uv-tests.sh
     ${CMAKE_CURRENT_BINARY_DIR}/dbus-wrapper-uv-tests.sh COPYONLY)
 
 add_test( NAME uv-dispatcher COMMAND dbus-wrapper-uv-tests.sh uv-dispatcher)
-#add_test( NAME uv-threaddispatcher COMMAND dbus-wrapper-uv-tests.sh standalone)
+
+if( WIN32 )
+  set_tests_property( uv-dispatcher PROPERTYIES
+    ENVIRONMENT "PATH=%PATH%;$<TARGET_FILE_DIR:${LIBUV_PKG_NAME}>;$<TARGET_FILE_DIR:dbus-cxx>;$<TARGET_FILE_DIR:dbus-cxx-uv>;" )
+endif( WIN32 )
