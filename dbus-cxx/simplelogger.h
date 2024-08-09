@@ -29,7 +29,12 @@
 #ifndef SIMPLELOGGER_LOG_FUNCTION_NAME
     #define SIMPLELOGGER_LOG_FUNCTION_NAME simplelogger_global_log_function
 #endif
-extern simplelogger_log_function SIMPLELOGGER_LOG_FUNCTION_NAME;
+#ifdef DBUS_DLL_IMPORT
+  __declspec(dllimport) simplelogger_log_function SIMPLELOGGER_LOG_FUNCTION_NAME;
+#else
+  extern simplelogger_log_function SIMPLELOGGER_LOG_FUNCTION_NAME;
+#endif
+
 
 #define SIMPLELOGGER_LOG_CSTR( logger, message, level ) do{\
         if( !SIMPLELOGGER_LOG_FUNCTION_NAME ) break;\

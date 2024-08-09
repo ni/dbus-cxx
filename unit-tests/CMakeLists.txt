@@ -7,6 +7,7 @@ link_directories( ${CMAKE_BINARY_DIR} )
 include_directories( ${CMAKE_SOURCE_DIR}/dbus-cxx ${CMAKE_BINARY_DIR}/dbus-cxx )
 
 if( WIN32 )
+  add_compile_definitions( DBUS_DLL_IMPORT )
   include_directories( ${CMAKE_SOURCE_DIR}/compat )
 endif( WIN32 )
 
