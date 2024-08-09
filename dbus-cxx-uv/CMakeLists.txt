@@ -37,6 +37,10 @@ target_link_libraries( dbus-cxx-uv PUBLIC PkgConfig::libuv )
 
 set_property( TARGET dbus-cxx-uv PROPERTY CXX_STANDARD 17 )
 
+if( WIN32 )
+    set_target_properties( dbus-cxx-uv PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON )
+endif( WIN32 )
+
 if( BUILD_TESTING )
     add_subdirectory( unit-tests )
 endif( BUILD_TESTING )
