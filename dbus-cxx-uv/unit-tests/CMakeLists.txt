@@ -35,8 +35,21 @@ target_include_directories( uv-caller PUBLIC ${CMAKE_SOURCE_DIR} )
 target_include_directories( uv-caller PUBLIC ${CMAKE_CURRENT_BINARY_DIR} )
 set_property( TARGET uv-caller PROPERTY CXX_STANDARD 17 )
 
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/dbus-wrapper-uv-tests.sh
-    ${CMAKE_CURRENT_BINARY_DIR}/dbus-wrapper-uv-tests.sh COPYONLY)
+if( WIN32 )
+  set( TEST_SCRIPT dbus-wrapper-uv-tests.bat )
+else( WIN32 )
+  set( TEST_SCRIPT dbus-wrapper-uv-tests.sh )
+endif( WIN32 )
 
-add_test( NAME uv-dispatcher COMMAND dbus-wrapper-uv-tests.sh uv-dispatcher)
-#add_test( NAME uv-threaddispatcher COMMAND dbus-wrapper-uv-tests.sh standalone)
+configure_file( ${TEST_SCRIPT} ${TEST_SCRIPT} COPYONLY )
+
+add_test( NAME uv-dispatcher COMMAND ${TEST_SCRIPT} uv-dispatcher)
+
+if( WIN32 )
+  set( PATH_MODIFICATION
+        "PATH=path_list_append:$<SHELL_PATH:${libuv_BINDIR}>"
+	"PATH=path_list_append:$<SHELL_PATH:$<TARGET_FILE_DIR:dbus-cxx>>"
+        "PATH=path_list_append:$<SHELL_PATH:$<TARGET_FILE_DIR:dbus-cxx-uv>>"
+        "PATH=path_list_append:$<SHELL_PATH:$<TARGET_FILE_DIR:uv-caller>>" )
+  set_tests_properties( uv-dispatcher PROPERTIES ENVIRONMENT_MODIFICATION "${PATH_MODIFICATION}" )
+endif( WIN32 )

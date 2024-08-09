@@ -8,12 +8,20 @@
 
 #include <uv.h>
 
-int value = 0;
+int result = 0;
 
 static void timer_cb(uv_timer_t* h)
 {
-    auto methodref = *reinterpret_cast<std::shared_ptr<DBus::MethodProxy<int(int,int)>>*>(h->data);
-    value = (*methodref)( 5, 10 ); 
+    try {
+        auto methodref = *reinterpret_cast<std::shared_ptr<DBus::MethodProxy<int(int,int)>>*>(h->data);
+        result = (*methodref)( 5, 10 );
+        fprintf(stderr, "*** uv-caller got %d\n", result);
+    }
+    catch (DBus::Error r) {
+        fprintf(stderr, "*** uv-caller got DBus::Error: %s\n", r.what());
+        result = -1;
+    }
+
     uv_stop(uv_default_loop());
 }
 
@@ -42,7 +50,5 @@ int main(int argc, char** argv){
         return -1;
     }
     
-    fprintf(stderr, "*** %s got %d\n", argv[0], value);
-
-    return value != 15;
+    return result != 15;
 }
