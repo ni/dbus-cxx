@@ -65,6 +65,14 @@ if( ENABLE_EXAMPLES AND NOT UNIX )
   message( FATAL_ERROR "Windows builds of examples are not supported")
 endif()
 
+if( ENABLE_GLIB_SUPPORT AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of glib integration are not supported")
+endif()
+
+if( ENABLE_QT_SUPPORT AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of qt integration are not supported")
+endif()
+
 #
 # Option-based includes
 #
