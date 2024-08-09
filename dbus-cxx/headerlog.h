@@ -13,7 +13,11 @@
 #include <sstream>
 #include <dbus-cxx/simplelogger_defs.h>
 
+#ifdef DBUS_DLL_IMPORT
+__declspec(dllimport) simplelogger_log_function dbuscxx_log_function;
+#else
 extern simplelogger_log_function dbuscxx_log_function;
+#endif
 
 #define DBUSCXX_LOG_CSTR_HEADER( logger, message, level ) do{\
         if( !dbuscxx_log_function ) break;\
