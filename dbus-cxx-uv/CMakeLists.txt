@@ -20,6 +20,11 @@ endif()
 
 pkg_check_modules( libuv REQUIRED IMPORTED_TARGET ${LIBUV_PKG_NAME} )
 
+if( WIN32 )
+  add_compile_definitions( DBUS_DLL_IMPORT )
+  include_directories( ${CMAKE_SOURCE_DIR}/compat )
+endif( WIN32 )
+
 set( dbus-cxx-uv-headers dbus-cxx-uv.h uvdispatcher.h )
 set( dbus-cxx-uv-sources dbus-cxx-uv.cpp uvdispatcher.cpp )
 
