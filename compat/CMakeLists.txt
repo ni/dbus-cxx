@@ -15,6 +15,7 @@
 set( dbus-cxx-compat-sources
         fcntl.c
         getdtablesize.c
+        init.cpp
         pipe2.c
         poll.c
         posix_win.c
