@@ -184,31 +184,14 @@ std::shared_ptr<priv::SignatureNode> Signature::create_signature_tree( std::stri
             ( *it )++;
             current->m_sub = create_signature_tree( it, container_stack, ok );
 
+            // Check for unbalanced containers
             if( container_stack->top() != toPush ) {
-                // Unbalanced
                 *ok = false;
                 return nullptr;
             }
 
-            // If we're the ending character of a container,
-            // advance the iterator so we go to the next character
-            ending_container = is_ending_container( **it );
-
-            if( ending_container &&
-                toPush == ContainerType::STRUCT ) {
-                container_stack->pop();
-
-                if( !container_stack->empty() ) {
-                    ( *it )++;
-                    return first;
-                }
-
-            } else if( ending_container &&
-                toPush == ContainerType::DICT_ENTRY ) {
-                container_stack->pop();
-                ( *it )++;
-                return first;
-            } else if( toPush == ContainerType::ARRAY &&
+            // Handle array (no end of array character)
+            if( toPush == ContainerType::ARRAY &&
                 current->m_sub != nullptr ) {
                 // Note: need to be special about popping and advancing iterator
                 // Assume we have 'aaid' as our signature.  When popping the array
@@ -233,6 +216,33 @@ std::shared_ptr<priv::SignatureNode> Signature::create_signature_tree( std::stri
                 }
 
                 break;
+            }
+
+            // Check for missing end of container char
+            if( *it == m_priv->m_signature.cend() ) {
+                *ok = false;
+                return nullptr;
+            }
+
+            // If we're at the end of a container, advance the
+            // iterator past any end of container character and pop
+            // the stack.
+            ending_container = is_ending_container( **it );
+
+            if( ending_container &&
+                toPush == ContainerType::STRUCT ) {
+                container_stack->pop();
+
+                if( !container_stack->empty() ) {
+                    ( *it )++;
+                    return first;
+                }
+
+            } else if( ending_container &&
+                toPush == ContainerType::DICT_ENTRY ) {
+                container_stack->pop();
+                ( *it )++;
+                return first;
             } else {
                 *ok = false;
                 return nullptr;
