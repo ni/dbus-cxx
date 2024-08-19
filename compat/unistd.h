@@ -46,7 +46,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-int getdtablesize(void);
 uid_t getuid(void);
 int pipe(int fildes[2]);
 int pipe2(int fildes[2], int flags);

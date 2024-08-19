@@ -49,11 +49,17 @@ static int dupfd( int oldfd, int newfd, int flags )
   BOOL inherit = flags & O_CLOEXEC ? FALSE : TRUE;
   int mode;
 
-  if (newfd < 0 || getdtablesize () <= newfd)
+  if (newfd < 0)
     {
       errno = EINVAL;
       return -1;
     }
+  if( _getmaxstdio() <= newfd) {
+    if( _setmaxstdio(newfd + 1) == -1) {
+      errno = EMFILE;
+      return -1;
+    }
+  }
   if (old_handle == INVALID_HANDLE_VALUE
       || (mode = setmode (oldfd, O_BINARY)) == -1)
     {
