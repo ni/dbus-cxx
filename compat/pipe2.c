@@ -113,7 +113,13 @@ err:
 
 int pipe(int fildes[2])
 {
-	return socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, PF_UNSPEC, fildes);
+	int rc = socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, PF_UNSPEC, fildes);
+        if (rc == 0) {
+                // Convert the sockets to file descriptors
+                fildes[0] = _open_osfhandle((intptr_t)fildes[0], 0);
+                fildes[1] = _open_osfhandle((intptr_t)fildes[1], 0);
+        }
+        return rc;
 }
 
 int pipe2(int fildes[2], int flags)
