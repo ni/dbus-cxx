@@ -217,6 +217,7 @@ bool call_message_iterator_insertion_extraction_operator_filedescriptor() {
     const char* appended = "FirstStringSecondString";
     char readData[ 24 ];
 
+
     memset( readData, 0, 24 );
 
     if( pipe( pipes ) < 0 ) {
@@ -229,6 +230,10 @@ bool call_message_iterator_insertion_extraction_operator_filedescriptor() {
     DBus::MessageAppendIterator iter1( msg );
     iter1 << v;
 
+#ifdef _WIN32
+    // On Windows, messages and file descriptors should be made invalid
+    return TEST_EQUALS(msg->is_valid(), false);
+#else
     DBus::MessageIterator iter2( msg );
     v2 = ( std::shared_ptr<DBus::FileDescriptor> )iter2;
 
@@ -245,6 +250,7 @@ bool call_message_iterator_insertion_extraction_operator_filedescriptor() {
     }
 
     return TEST_EQUALS( memcmp( appended, readData, 23 ), 0 );
+#endif
 }
 
 bool call_message_append_extract_iterator_filedescriptor() {
@@ -268,6 +274,10 @@ bool call_message_append_extract_iterator_filedescriptor() {
     DBus::MessageAppendIterator iter1( msg );
     iter1 << v;
 
+#ifdef _WIN32
+    // On Windows, messages and file descriptors should be made invalid
+    return TEST_EQUALS(msg->is_valid(), false);
+#else
     DBus::MessageIterator iter2( msg );
     iter2 >> v2;
 
@@ -284,6 +294,7 @@ bool call_message_append_extract_iterator_filedescriptor() {
     }
 
     return TEST_EQUALS( memcmp( appended, readData, 23 ), 0 );
+#endif
 }
 
 bool call_message_append_extract_iterator_struct() {

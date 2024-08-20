@@ -181,15 +181,19 @@ int fcntl( int fd, int action, /* arg */... )
     {
     case F_DUPFD:
       {
-        int target = va_arg (arg, int);
-        result = dupfd(fd, target, 0);
+        // As of 1.15.8, the reference implementation of D-Bus does not
+        // support file descriptors on Windows. We return an invalid
+        // descriptor here to prevent using them.
+        result = -1;
         break;
       }
 
     case F_DUPFD_CLOEXEC:
       {
-        int target = va_arg (arg, int);
-        result = dupfd(fd, target, O_CLOEXEC);
+        // As of 1.15.8, the reference implementation of D-Bus does not
+        // support file descriptors on Windows. We return an invalid
+        // descriptor here to prevent using them.
+        result = -1;
         break;
       }
 
