@@ -140,7 +140,7 @@ bool affinity_signal_main_thread() {
     return false;
 }
 
-bool affinity_message_dispatch_thread() {
+bool affinity_message_dispatcher_thread() {
     std::shared_ptr<DBus::Connection> conn = dispatch->create_connection( DBus::BusType::SESSION );
     conn->request_name( "dbuscxx.test" );
 
@@ -253,7 +253,7 @@ int main( int argc, char** argv ) {
 
     ADD_TEST( signal_dispatcher_thread );
     ADD_TEST( signal_main_thread );
-    ADD_TEST( message_dispatch_thread );
+    ADD_TEST( message_dispatcher_thread );
     ADD_TEST( message_main_thread );
     ADD_TEST( message_change_thread );
 
