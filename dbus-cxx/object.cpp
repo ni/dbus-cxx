@@ -373,7 +373,11 @@ HandlerResult Object::handle_message( std::shared_ptr<const Message> message ) {
         if( msg->member() == "Ping" ) {
             conn << msg->create_reply();
             return HandlerResult::Handled;
-        } else if( msg->member() == "GetMachineId" ) {
+        } else if (msg->member() == "GetMachineId") {
+#ifdef _WIN32
+            // The reference implementation uses GetCurrentHwProfileA() for this.
+            std::string line = "01234567012345670123456701234567";
+#else
             std::ifstream inputFile( "/var/lib/dbus/machine-id" );
             std::string line;
             std::getline( inputFile, line );
@@ -386,6 +390,7 @@ HandlerResult Object::handle_message( std::shared_ptr<const Message> message ) {
                 conn << errmsg;
                 return HandlerResult::Handled;
             }
+#endif
 
             std::shared_ptr<ReturnMessage> return_message = msg->create_reply();
             return_message << line;
