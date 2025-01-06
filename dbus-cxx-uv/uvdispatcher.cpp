@@ -106,9 +106,11 @@ public:
         uv_close((uv_handle_t*)uv_poll, close_cb);
     }
 
-    void restart() { uv_poll_start(uv_poll, UV_READABLE, poll_cb); }
+    void restart() { uv_poll_start(uv_poll, UV_READABLE | UV_DISCONNECT, poll_cb); }
 
-    void restart_writeable() { uv_poll_start(uv_poll, UV_READABLE | UV_WRITABLE, poll_cb); }
+    void restart_writeable() { uv_poll_start(uv_poll, UV_READABLE | UV_WRITABLE | UV_DISCONNECT, poll_cb); }
+
+    void stop() { uv_poll_stop(uv_poll); }
 
     std::shared_ptr<DBus::Connection> connection;
 
@@ -123,29 +125,31 @@ poll_cb(uv_poll_t* h, int status, int event)
 {
     auto uvpc = static_cast<UVPollConnection*>(h->data);
 
-    if (status == -EBADF) {
-        // "bad file descrioptior" indicates the FD was a pipe
-        // (FIFO) and the other end was closed
-        //
-        // log and ignore assuming that this is part of
-        // pipeline shutdown
-        //
-        SIMPLELOGGER_DEBUG( LOGGER_NAME, "polled FD went bad, assmuming pipeline shutdown" );
-    } else if (status < 0) {
+    if (status < 0) {
         SIMPLELOGGER_ERROR( LOGGER_NAME, "poll_cb called with bad status: " << std::strerror(-status) << ", " << status);
-    } else if (event & UV_WRITABLE) {
-         // if we were polling for write-ability, we need to restart
-         // the poll handle after dispatching to stop (the
-         // signal_needs_dispatch handler will restart for write)
-         while (uvpc->connection->dispatch() != DBus::DispatchStatus::COMPLETE) {
-         }
-         uvpc->restart();
-     } else if (event & UV_READABLE) {
-         // if there is no write-able event then there is no need to
-         // restart to poll handle
-         while (uvpc->connection->dispatch() != DBus::DispatchStatus::COMPLETE) {
-         }
-     }
+        throw std::system_error(status, std::system_category(), "poll_cb");
+    }
+
+    // let the main library process the socket as long as it wants
+    while (uvpc->connection->dispatch() != DBus::DispatchStatus::COMPLETE) {
+    }
+
+    // if we were polling for write-ability, we need to restart
+    // the poll handle after dispatching to stop (the
+    // signal_needs_dispatch handler will restart for write)
+    if (event & UV_WRITABLE) {
+        uvpc->restart();
+    }
+
+    // if the connection is closed, stop the poll handle to prevent
+    // retriggering this callback and throw an exception to indicate
+    // the host should terminate or recreate the connection.
+    //
+    /// TODO: Make this a specific exception type.
+    if (event & UV_DISCONNECT) {
+        uvpc->stop();
+        throw std::runtime_error("DBus connection closed");
+    }
 }
 
 class UvDispatcher::priv_data {
