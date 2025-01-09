@@ -8,6 +8,7 @@
 #include "dispatcher.h"
 
 namespace DBus {
+
 Dispatcher::~Dispatcher() {
 }
 

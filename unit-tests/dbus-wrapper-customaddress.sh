@@ -7,6 +7,7 @@ dbus-launch > $TMPFILE
 
 . $TMPFILE
 export CUSTOM_DBUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS
+export DBUS_SESSION_BUS_ADDRESS=
 export PATH=$PATH:$(pwd)
 
 # exec whatever was passed to us

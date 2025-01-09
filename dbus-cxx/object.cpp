@@ -373,7 +373,16 @@ HandlerResult Object::handle_message( std::shared_ptr<const Message> message ) {
         if( msg->member() == "Ping" ) {
             conn << msg->create_reply();
             return HandlerResult::Handled;
-        } else if( msg->member() == "GetMachineId" ) {
+        } else if (msg->member() == "GetMachineId") {
+#ifdef _WIN32
+            // TODO: The reference implementation uses GetCurrentHwProfileA() for this.
+            SIMPLELOGGER_ERROR( LOGGER_NAME, "Machine ID not implemented." );
+            std::shared_ptr<ErrorMessage> errmsg = msg->create_error_reply();
+            errmsg->set_name( DBUSCXX_ERROR_NOT_SUPPORTED );
+            errmsg->set_message( "Machine ID not implemented" );
+            conn << errmsg;
+            return HandlerResult::Handled;
+#else
             std::ifstream inputFile( "/var/lib/dbus/machine-id" );
             std::string line;
             std::getline( inputFile, line );
@@ -391,6 +400,7 @@ HandlerResult Object::handle_message( std::shared_ptr<const Message> message ) {
             return_message << line;
             conn << return_message;
             return HandlerResult::Handled;
+#endif
         }
 
         return HandlerResult::Invalid_Method;

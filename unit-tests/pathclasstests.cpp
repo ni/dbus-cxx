@@ -23,37 +23,37 @@
 
 #include "test_macros.h"
 
-bool path_test_valid() {
+bool path_valid() {
     DBus::Path path = "/this/1/is/a/valid/path";
     TEST_ASSERT_RET_FAIL( path.is_valid() == true );
     return true;
 }
 
-bool path_test_invalid_characters() {
+bool path_invalid_characters() {
     DBus::Path path = "/this/is/an invalid/path";
     TEST_ASSERT_RET_FAIL( path.is_valid() == false );
     return true;
 }
 
-bool path_test_invalid_trailing_slash() {
+bool path_invalid_trailing_slash() {
     DBus::Path path = "/this/1/is/an/invalid/path/";
     TEST_ASSERT_RET_FAIL( path.is_valid() == false );
     return true;
 }
 
-bool path_test_invalid_empty_path() {
+bool path_invalid_empty_path() {
     DBus::Path path = "";
     TEST_ASSERT_RET_FAIL( path.is_valid() == false );
     return true;
 }
 
-bool path_test_invalid_double_slash() {
+bool path_invalid_double_slash() {
     DBus::Path path = "/this/1/is/an//invalid/path/";
     TEST_ASSERT_RET_FAIL( path.is_valid() == false );
     return true;
 }
 
-bool path_test_invalid_missing_leading_slash() {
+bool path_invalid_missing_leading_slash() {
     DBus::Path path = "this/1/is/an/invalid/path/";
     TEST_ASSERT_RET_FAIL( path.is_valid() == false );
     return true;
@@ -163,12 +163,12 @@ int main( int argc, char** argv ) {
     std::string test_name = argv[1];
     bool ret = false;
 
-    ADD_TEST( test_valid );
-    ADD_TEST( test_invalid_characters );
-    ADD_TEST( test_invalid_trailing_slash );
-    ADD_TEST( test_invalid_empty_path );
-    ADD_TEST( test_invalid_double_slash );
-    ADD_TEST( test_invalid_missing_leading_slash );
+    ADD_TEST( valid );
+    ADD_TEST( invalid_characters );
+    ADD_TEST( invalid_trailing_slash );
+    ADD_TEST( invalid_empty_path );
+    ADD_TEST( invalid_double_slash );
+    ADD_TEST( invalid_missing_leading_slash );
     ADD_TEST( decompose_valid );
     ADD_TEST( decompose_root );
     ADD_TEST( decompose_invalid );

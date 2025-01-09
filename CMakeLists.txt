@@ -300,11 +300,12 @@ if( WIN32 )
         set( WIN32_VER "0x${ver}" )
     endif( CMAKE_SYSTEM_VERSION )
     add_definitions( -D_WIN32_WINNT=${WIN32_VER} )
-    set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON )
 
     if( MSVC AND (MSVC_VERSION GREATER_EQUAL 1914) )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus" )
     endif( MSVC AND (MSVC_VERSION GREATER_EQUAL 1914) )
+
+    set_target_properties( dbus-cxx PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON )
 
     add_subdirectory( compat )
 endif( WIN32 )

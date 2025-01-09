@@ -240,13 +240,24 @@ bool data_machine_uuid() {
     std::shared_ptr<DBus::MethodProxy<std::string()>> machineIdMethod =
             proxy->create_method<std::string()>( DBUS_CXX_PEER_INTERFACE, "GetMachineId" );
 
-    std::string retval = ( *machineIdMethod )();
+    try {
+        std::string retval = ( *machineIdMethod )();
 
-    // DBus Specification:
-    // The hex-encoded string may not contain hyphens or other non-hex-digit characters,
-    // and it must be exactly 32 characters long.
-    if( retval.length() == 32 ) {
+        // DBus Specification:
+        // The hex-encoded string may not contain hyphens or other non-hex-digit characters,
+        // and it must be exactly 32 characters long.
+        if( retval.length() == 32 ) {
+            return true;
+        }
+    }
+#ifdef _WIN32
+    catch (DBus::Error e) {
+        // Windows does not support the GetMachineId method
         return true;
+    }
+#endif
+    catch(...) {
+        throw;
     }
 
     return false;
