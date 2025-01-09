@@ -22,9 +22,6 @@ include( CheckTypeSize )
 include( CTest )
 include( CheckCXXSymbolExists )
 include( CheckCXXCompilerFlag )
-IF( CMAKE_BUILD_TYPE MATCHES Debug )
-include( CodeCoverage )
-ENDIF( CMAKE_BUILD_TYPE MATCHES Debug )
 
 find_package(PkgConfig REQUIRED)
 
@@ -43,7 +40,6 @@ pkg_check_modules( sigc REQUIRED IMPORTED_TARGET sigc++-3.0 )
 #
 option( ENABLE_EXAMPLES "Enable the examples" OFF )
 option( ENABLE_TOOLS "Enable dbus-cxx tools" OFF )
-option( ENABLE_GLIB_SUPPORT "Enable GLib support" OFF )
 option( BUILD_SITE "Build the dbus-cxx website reference" OFF )
 option( TOOLS_BUNDLED_CPPGENERATE "Use bundled libcppgenerate" ON )
 option( ENABLE_CODE_COVERAGE_REPORT "Enable code coverage report" OFF )
@@ -53,9 +49,40 @@ endif()
 if( BUILD_TESTING )
 option( ENABLE_ROBUSTNESS_TESTS "Enable extended robustness tests.  These can be long-running tests." OFF)
 endif( BUILD_TESTING )
+option( ENABLE_GLIB_SUPPORT "Build libdbuscxx-glib for integration with GLib applications" OFF )
 option( ENABLE_QT_SUPPORT "Build libdbuscxx-qt for integration with Qt applications" OFF )
 option( ENABLE_UV_SUPPORT "Build libdbuscxx-uv for integration with libuv applications" OFF )
 option( UV_STATIC "Link statically with libuv when using it" OFF )
+
+#
+# Option validity checks
+#
+if( ENABLE_TOOLS AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of tools are not supported")
+endif()
+
+if( ENABLE_EXAMPLES AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of examples are not supported")
+endif()
+
+if( ENABLE_GLIB_SUPPORT AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of glib integration are not supported")
+endif()
+
+if( ENABLE_QT_SUPPORT AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of qt integration are not supported")
+endif()
+
+if( ENABLE_UV_SUPPORT AND NOT UNIX )
+  message( FATAL_ERROR "Windows builds of uv integration are not supported")
+endif()
+
+#
+# Option-based includes
+#
+if( ENABLE_CODE_COVERAGE_REPORT )
+  include( CodeCoverage )
+endif( ENABLE_CODE_COVERAGE_REPORT )
 
 # With glibc >= 2.35, it seems that we no longer need to link with -lrt:
 # https://sourceware.org/pipermail/libc-alpha/2021-August/129718.html
@@ -465,3 +492,4 @@ message(STATUS "Library Support:" )
 message(STATUS "  Qt .............................. : ${ENABLE_QT_SUPPORT}")
 message(STATUS "  GLib ............................ : ${ENABLE_GLIB_SUPPORT}")
 message(STATUS "  libuv ........................... : ${ENABLE_UV_SUPPORT} (static: ${UV_STATIC})")
+
