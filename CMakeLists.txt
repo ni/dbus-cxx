@@ -73,8 +73,8 @@ if( ENABLE_QT_SUPPORT AND NOT UNIX )
   message( FATAL_ERROR "Windows builds of qt integration are not supported")
 endif()
 
-if( ENABLE_UV_SUPPORT AND NOT UNIX )
-  message( FATAL_ERROR "Windows builds of uv integration are not supported")
+if( ENABLE_UV_SUPPORT AND NOT UNIX AND UV_STATIC )
+  message( FATAL_ERROR "Windows builds of uv integration with static linking are not supported")
 endif()
 
 #

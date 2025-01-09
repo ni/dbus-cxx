@@ -19,6 +19,12 @@ else()
 endif()
 
 pkg_check_modules( libuv REQUIRED IMPORTED_TARGET ${LIBUV_PKG_NAME} )
+pkg_get_variable( libuv_BINDIR ${LIBUV_PKG_NAME} bindir )
+
+if( WIN32 )
+  add_compile_definitions( DBUS_DLL_IMPORT )
+  include_directories( ${CMAKE_SOURCE_DIR}/compat )
+endif( WIN32 )
 
 set( dbus-cxx-uv-headers dbus-cxx-uv.h uvdispatcher.h )
 set( dbus-cxx-uv-sources dbus-cxx-uv.cpp uvdispatcher.cpp )
@@ -28,14 +34,17 @@ set_target_properties( dbus-cxx-uv PROPERTIES
     VERSION 2.0.0 SOVERSION 2
     PUBLIC_HEADER "${dbus-cxx-uv-headers}"
 )
-target_link_libraries( dbus-cxx-uv PUBLIC dbus-cxx PkgConfig::sigc ${LIBRT} )
+target_link_libraries( dbus-cxx-uv PUBLIC dbus-cxx PkgConfig::sigc ${LIBRT} PkgConfig::libuv )
 target_include_directories( dbus-cxx-uv INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include/dbus-cxx-uv-${DBUS_CXX_INCLUDE_VERSION}>
 )
-target_link_libraries( dbus-cxx-uv PUBLIC PkgConfig::libuv )
 
 set_property( TARGET dbus-cxx-uv PROPERTY CXX_STANDARD 17 )
+
+if( WIN32 )
+    set_target_properties( dbus-cxx-uv PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON )
+endif( WIN32 )
 
 if( BUILD_TESTING )
     add_subdirectory( unit-tests )

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later OR BSD-3-Clause
 // SPDX-License-Identifier: LGPL-3.0-or-later OR BSD-3-Clause
 
-#include <uv.h>
-
 #include <dbus-cxx-uv.h>
 
 #include "calleeclass.h"
+
+#include <uv.h>
 
 static void timer_cb(uv_timer_t* h)
 {
