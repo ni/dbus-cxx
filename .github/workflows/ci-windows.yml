@@ -1,0 +1,51 @@
+name: CI Build on Windows
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+      
+jobs:
+  build:
+    runs-on: windows-latest
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+        
+    - name: Install Conan
+      run: python -m pip install conan
+
+    - name: Detect Conan Default Profile
+      run: conan profile detect
+      
+    - name: Install dependencies with Conan
+      run: > 
+        conan install
+        --requires="libsigcpp/3.0.7"
+        --requires="expat/2.6.2"
+        --requires="libuv/1.44.2"
+        --tool-requires="pkgconf/2.2.0"
+        --build=missing
+        --output-folder=build
+        -pr default
+        -s "compiler.cppstd=17"
+        -g PkgConfigDeps -g CMakeToolchain
+
+    - name: Generate Build System
+      run: >
+        cmake
+        -B ${{github.workspace}}/build -S .
+        -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/build/conan_toolchain.cmake
+        -DCMAKE_POLICY_DEFAULT_CMP0091=NEW
+        -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config Release -DBUILD_TESTING=On -DENABLE_UV_SUPPORT=On
